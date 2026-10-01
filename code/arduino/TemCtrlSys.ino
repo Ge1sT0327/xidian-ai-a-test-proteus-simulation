@@ -1,8 +1,7 @@
 /* ============================================================
  *  Temperature Measurement & Control Simulation System
  *  Target : Arduino UNO (ATmega328P) @ 16 MHz
- *  Author : Student ID 23009290073
- *  Threshold = 30 + last digit of student ID (3) = 33.0 C
+ *  Threshold = 30 + last digit of student ID (0) = 30.0 C
  *
  *  Hardware (fixed by the Proteus design):
  *    LCD1602 LM016L, 4-bit mode
@@ -13,21 +12,24 @@
  *      SDA -> A4 (PC4)     SCL -> A5 (PC5)
  *    DC motor driver
  *      D7 -> 4.7k base resistor -> 2N3904 -> relay -> MOTOR-DC
- *    COMPIM serial link to PC: COM1 @ 9600 8-N-1
+ *    COMPIM serial link to PC: COM11 @ 9600 8-N-1
  *
  *  Behaviour:
  *    1) PC sends the student ID; the Arduino then streams temperature
- *    2) LCD line 1 shows "ID:23009290073", line 2 shows "TEMP:xx.xC"
- *    3) temp >  33.0 C -> D7 high, motor runs
- *       temp <= 33.0 C -> D7 low,  motor stops
+ *    2) LCD line 1 shows "ID:20230000000", line 2 shows "TEMP:xx.xC"
+ *    3) temp >  30.0 C -> D7 high, motor runs
+ *       temp <= 30.0 C -> D7 low,  motor stops
+ *
+ *  NOTE: replace STUDENT_ID with your own full student number, and
+ *        set TEMP_LIMIT = 30 + (the last digit of your student number).
  * ============================================================ */
 
 #include <Wire.h>
 #include <LiquidCrystal.h>
 
 /* ---------------- configuration ---------------- */
-#define STUDENT_ID   "23009290073"
-#define TEMP_LIMIT   33.0
+#define STUDENT_ID   "20230000000"      /* <<< 换成你自己的完整学号 */
+#define TEMP_LIMIT   30.0               /* <<< 30 + 你学号末位数 */
 /* #define DEBUG_TEMP10 365 */   /* force 36.5 C for hardware-free tests */
 
 /* ---------------- pins ---------------- */
@@ -168,7 +170,7 @@ void updateLCD10(long t10)
  * ============================================================ */
 void updateMotor10(long t10)
 {
-  if (t10 > (long)(TEMP_LIMIT * 10.0f)) {     /* > 33.0 C */
+  if (t10 > (long)(TEMP_LIMIT * 10.0f)) {     /* > 30.0 C */
     digitalWrite(MOTOR_PIN, HIGH);
     motorOn = true;
   } else {

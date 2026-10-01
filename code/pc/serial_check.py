@@ -19,7 +19,7 @@ except ImportError:
     print("缺少 pyserial 库，请先执行:  pip install pyserial")
     sys.exit(1)
 
-STUDENT_ID = "23009290073"
+STUDENT_ID = "20230000000"
 
 
 def list_ports_():

@@ -5,7 +5,10 @@ import os
 from PIL import Image, ImageDraw, ImageFont
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(HERE, "screenshots", "sys_block.png")
+REPO = os.path.dirname(HERE)                  # 仓库根目录
+OUT = os.path.join(REPO, "screenshots", "sys_block.png")
+if not os.path.isdir(os.path.dirname(OUT)):
+    OUT = os.path.join(HERE, "screenshots", "sys_block.png")
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
 
 SCALE = 3
@@ -95,10 +98,10 @@ arrow(PX, PY + PH / 2, CX + CW, CY + CH / 2, "9600 8-N-1", color=GREEN_O, side="
 arrow(CX + CW, CY + CH / 2, PX, PY + PH / 2, None, color=GREEN_O)
 
 d.text((SX * SCALE, 560 * SCALE),
-       "说明：传感器温度由手动调节；温度 > 33 ℃ 时 IO7 输出高电平，驱动直流电机转动；"
-       "温度 ≤ 33 ℃ 时电机停止。", font=F, fill="#7a879b")
+       "说明：传感器温度由手动调节；温度 > 30 ℃ 时 IO7 输出高电平，驱动直流电机转动；"
+       "温度 ≤ 30 ℃ 时电机停止。", font=F, fill="#7a879b")
 d.text((SX * SCALE, 588 * SCALE),
-       "LCD 第一行显示 ID：23009290073，第二行显示 TEMP：温度值；温度值同时回传 PC 上位机显示。",
+       "LCD 第一行显示 ID：20230000000，第二行显示 TEMP：温度值；温度值同时回传 PC 上位机显示。",
        font=F, fill="#7a879b")
 
 img = img.resize((W, H), Image.LANCZOS)
