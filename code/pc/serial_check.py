@@ -12,15 +12,12 @@
 import sys
 import time
 
-sys.path.insert(0, __file__.rsplit("\\", 1)[0])
 try:
     import serial
     from serial.tools import list_ports
 except ImportError:
-    import os
-    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "pylibs"))
-    import serial
-    from serial.tools import list_ports
+    print("缺少 pyserial 库，请先执行:  pip install pyserial")
+    sys.exit(1)
 
 STUDENT_ID = "23009290073"
 
