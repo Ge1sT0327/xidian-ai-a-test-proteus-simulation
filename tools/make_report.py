@@ -27,7 +27,10 @@ LAST_DIGIT = int(STUDENT_ID[-1])
 THRESHOLD = 30 + LAST_DIGIT
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-SHOT_DIR = os.path.join(HERE, "screenshots")
+REPO = os.path.dirname(HERE)                 # 仓库根目录
+SHOT_DIR = os.path.join(REPO, "screenshots")
+if not os.path.isdir(SHOT_DIR):
+    SHOT_DIR = os.path.join(HERE, "screenshots")
 
 CN_BODY = "宋体"
 CN_HEAD = "黑体"
@@ -321,10 +324,23 @@ def main():
     st.font.size = Pt(12)
     st.element.rPr.rFonts.set(qn('w:eastAsia'), CN_BODY)
 
-    arduino_src = open(os.path.join(HERE, "code", "TemCtrlSys", "TemCtrlSys.ino"),
-                       encoding="utf-8").read()
-    pc_src = open(os.path.join(HERE, "code", "PC_Upper", "TempMonitor.py"),
-                  encoding="utf-8").read()
+    def _src(*cands):
+        """按候选路径依次查找源码（兼容仓库布局与本地工作区布局）"""
+        for c in cands:
+            if os.path.exists(c):
+                return open(c, encoding="utf-8").read()
+        raise FileNotFoundError("找不到源码，尝试过：%s" % (cands,))
+
+    arduino_src = _src(
+        os.path.join(REPO, "code", "arduino", "TemCtrlSys.ino"),
+        os.path.join(HERE, "code", "TemCtrlSys", "TemCtrlSys.ino"),
+        os.path.join(HERE, "code", "arduino", "TemCtrlSys.ino"),
+    )
+    pc_src = _src(
+        os.path.join(REPO, "code", "pc", "TempMonitor.py"),
+        os.path.join(HERE, "code", "PC_Upper", "TempMonitor.py"),
+        os.path.join(HERE, "code", "pc", "TempMonitor.py"),
+    )
 
     build_cover(doc)
     build_requirements(doc)

@@ -10,8 +10,14 @@
   仿真仍会跑旧的 Debug.elf。因此必须重新编译并把它注入工程。
 
 用法:
-  python build_firmware.py            # 编译 + 注入
-  python build_firmware.py --noinject # 只编译
+  python build_firmware.py                     # 编译 + 注入（自动探测路径）
+  python build_firmware.py --noinject          # 只编译
+  python build_firmware.py --proteus "D:\\Proteus 8 Professional"
+  python build_firmware.py --out "D:\\pd_build"   # 指定编译输出目录(需纯ASCII路径)
+
+环境变量（可选，优先级低于命令行参数）:
+  PROTEUS_DIR    Proteus 安装目录
+  AVR_BUILD_DIR  编译输出目录
 """
 import os
 import re
@@ -28,28 +34,90 @@ except Exception:
     pass
 
 # ------------------------------------------------------------------
+# 路径解析
+#   tools/ 在仓库里，仓库根 = tools/ 的上一级
+# ------------------------------------------------------------------
 HERE   = os.path.dirname(os.path.abspath(__file__))
-WSROOT = os.path.dirname(HERE)                      # default-workspace
+REPO   = os.path.dirname(HERE)                     # 仓库根目录
 
-PROTEUS = r"G:\Proteus\Proteus 8 Professional"
+
+def _find_proteus():
+    """依次尝试：环境变量 -> 常见安装位置"""
+    cands = []
+    if os.environ.get("PROTEUS_DIR"):
+        cands.append(os.environ["PROTEUS_DIR"])
+    for drive in ("C:", "D:", "E:", "F:", "G:"):
+        cands.append(os.path.join(drive, os.sep, "Proteus",
+                                  "Proteus 8 Professional"))
+        cands.append(os.path.join(drive, os.sep,
+                                  "Program Files (x86)", "Labcenter Electronics",
+                                  "Proteus 8 Professional"))
+        cands.append(os.path.join(drive, os.sep,
+                                  "Program Files", "Labcenter Electronics",
+                                  "Proteus 8 Professional"))
+    for c in cands:
+        if os.path.isdir(os.path.join(c, "Tools", "ARDUINO")):
+            return c
+    return cands[0]                                # 兜底，后面会报错提示
+
+
+PROTEUS = _find_proteus()
 TOOLS   = os.path.join(PROTEUS, "Tools", "ARDUINO")
 AVRBIN  = os.path.join(TOOLS, "hardware", "tools", "avr", "bin")
 HWDIR   = os.path.join(TOOLS, "hardware", "arduino", "avr")
 LIBS    = os.path.join(TOOLS, "libraries")
 
-SKETCH  = os.path.join(HERE, "code", "TemCtrlSys", "TemCtrlSys.ino")
-PRJ     = os.path.join(HERE, "TemCtrlSys.pdsprj")
+# 仓库布局：源码在 code/arduino/，工程在 proteus/
+SKETCH_DEFAULT = os.path.join(REPO, "code", "arduino", "TemCtrlSys.ino")
+PRJ_DEFAULT    = os.path.join(REPO, "proteus", "TemCtrlSys.pdsprj")
 
-# 允许命令行覆盖： python build_firmware.py <sketch> <prj> [--noinject]
-_argv = [a for a in sys.argv[1:] if not a.startswith("--")]
-if len(_argv) >= 1:
-    SKETCH = _argv[0]
-if len(_argv) >= 2:
-    PRJ = _argv[1]
-    BUILD = os.path.join(os.path.dirname(PRJ), "_build")
+SKETCH = SKETCH_DEFAULT
+PRJ    = PRJ_DEFAULT
 
-# 编译输出目录必须放在纯 ASCII 路径下（工具链对中文路径不友好）
-BUILD   = r"G:\dsh_at\build"
+# 编译输出目录：必须放在**纯 ASCII 路径**下。
+# 工程内部文件 ROOT.CDB 是 latin-1 编码，含中文的路径会把它写坏。
+# 默认取仓库所在盘的根目录下的 pd_build，可用 --out / AVR_BUILD_DIR 覆盖。
+_drive = os.path.splitdrive(os.path.abspath(REPO))[0] or "C:"
+BUILD  = os.path.join(_drive + os.sep, "pd_build")
+
+# ---- 解析命令行 ----
+_args = sys.argv[1:]
+_i = 0
+while _i < len(_args):
+    a = _args[_i]
+    if a == "--proteus" and _i + 1 < len(_args):
+        PROTEUS = _args[_i + 1]
+        TOOLS   = os.path.join(PROTEUS, "Tools", "ARDUINO")
+        AVRBIN  = os.path.join(TOOLS, "hardware", "tools", "avr", "bin")
+        HWDIR   = os.path.join(TOOLS, "hardware", "arduino", "avr")
+        LIBS    = os.path.join(TOOLS, "libraries")
+        _i += 2
+        continue
+    if a == "--out" and _i + 1 < len(_args):
+        BUILD = _args[_i + 1]
+        _i += 2
+        continue
+    if a == "--sketch" and _i + 1 < len(_args):
+        SKETCH = _args[_i + 1]
+        _i += 2
+        continue
+    if a == "--prj" and _i + 1 < len(_args):
+        PRJ = _args[_i + 1]
+        _i += 2
+        continue
+    _i += 1
+
+if os.environ.get("AVR_BUILD_DIR"):
+    BUILD = os.environ["AVR_BUILD_DIR"]
+
+# 兼容老的按位置传参写法： build_firmware.py <sketch> <prj>
+_pos = [a for a in _args if not a.startswith("--")]
+_pos = [a for a in _pos if a not in (PROTEUS, BUILD, SKETCH, PRJ)]
+if len(_pos) >= 1 and os.path.isfile(_pos[0]):
+    SKETCH = _pos[0]
+if len(_pos) >= 2 and os.path.isfile(_pos[1]):
+    PRJ = _pos[1]
+
 ELF_NAME = "Debug.elf"
 
 MCU     = "atmega328p"

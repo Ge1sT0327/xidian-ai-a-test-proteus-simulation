@@ -21,7 +21,11 @@ import sys
 import zipfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-PRJ = os.path.join(HERE, "TemCtrlSys.pdsprj")
+REPO = os.path.dirname(HERE)
+# 仓库布局：工程在 proteus/ 下；也兼容脚本与工程同目录的情况
+PRJ = os.path.join(REPO, "proteus", "TemCtrlSys.pdsprj")
+if not os.path.exists(PRJ):
+    PRJ = os.path.join(HERE, "TemCtrlSys.pdsprj")
 TARGET = "ROOT.CDB"
 
 try:
