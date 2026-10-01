@@ -40,3 +40,8 @@ Desktop.ini
 tmp/
 temp/
 _chk/
+
+# ---- 临时文件 ----
+.git-commit-msg.txt
+_ref.png
+
