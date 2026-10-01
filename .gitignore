@@ -1,0 +1,42 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+pip-log.txt
+
+# ---- Proteus 自动生成的运行时文件 ----
+*.workspace
+*~*.pdsprj
+*_build/
+Project Backups/
+
+# ---- Arduino CLI 工具链（体积大，不需要入库）----
+A测试工作区/tools/
+tools/arduino/
+tools/arduino-cli/
+
+# ---- 编译中间产物（保留 Debug.elf / .hex，其余忽略）----
+*.o
+*.d
+*.eep
+*.with_bootloader.*
+sketch/
+
+# ---- 编辑器 / 系统 ----
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini
+*.lnk
+*.tmp
+
+# ---- Vision Router 产物 ----
+.dsh-vision-router/
+
+# ---- 临时目录 ----
+tmp/
+temp/
+_chk/
